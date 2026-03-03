@@ -31,22 +31,20 @@ If you use AI as a crutch to solve the simple problems for you,
 you will not be able to solve the more difficult problems.
 '''
 
-from markdown_compiler import *
+from markdown_compiler import *  # noqa: F401,F403
+
 
 def main():
     # process command line arguments
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_file', required=True)
-    # FIXME:
-    # to get the command_lines test to pass,
-    # you will need to uncomment the line below;
-    # then add the args.add_css variable as a parameter to convert_file
-    #parser.add_argument('--add_css', action='store_true')
+    parser.add_argument('--add_css', action='store_true')
     args = parser.parse_args()
 
     # call the main function
-    convert_file(args.input_file, False)
+    convert_file(args.input_file, args.add_css)  # noqa: F405
+
 
 if __name__ == '__main__':
     main()

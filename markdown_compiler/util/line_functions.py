@@ -2,6 +2,7 @@
 Each of the functions in this file takes a single line of input and transforms the line in some way.
 '''
 
+
 def compile_headers(line):
     '''
     Convert markdown headers into <h1>,<h2>,etc tags.
@@ -26,6 +27,10 @@ def compile_headers(line):
     >>> compile_headers('      # this is not a header')
     '      # this is not a header'
     '''
+    for i in range(6, 0, -1):
+        prefix = '#' * i
+        if line.startswith(prefix) and (len(line) == i or line[i] != '#'):
+            return f'<h{i}>{line[i:]}</h{i}>'
     return line
 
 
@@ -50,7 +55,25 @@ def compile_italic_star(line):
     >>> compile_italic_star('*')
     '*'
     '''
-    return line
+    result = ''
+    i = 0
+    while i < len(line):
+        if line[i] == '*':
+            if i + 1 < len(line) and line[i + 1] == '*':
+                result += '*'
+                i += 1
+            else:
+                j = line.find('*', i + 1)
+                if j != -1:
+                    result += '<i>' + line[i + 1:j] + '</i>'
+                    i = j + 1
+                else:
+                    result += line[i:]
+                    break
+        else:
+            result += line[i]
+            i += 1
+    return result
 
 
 def compile_italic_underscore(line):
@@ -71,7 +94,25 @@ def compile_italic_underscore(line):
     >>> compile_italic_underscore('_')
     '_'
     '''
-    return line
+    result = ''
+    i = 0
+    while i < len(line):
+        if line[i] == '_':
+            if i + 1 < len(line) and line[i + 1] == '_':
+                result += '_'
+                i += 1
+            else:
+                j = line.find('_', i + 1)
+                if j != -1:
+                    result += '<i>' + line[i + 1:j] + '</i>'
+                    i = j + 1
+                else:
+                    result += line[i:]
+                    break
+        else:
+            result += line[i]
+            i += 1
+    return result
 
 
 def compile_strikethrough(line):
@@ -94,7 +135,21 @@ def compile_strikethrough(line):
     >>> compile_strikethrough('~~')
     '~~'
     '''
-    return line
+    result = ''
+    i = 0
+    while i < len(line):
+        if line[i:i + 2] == '~~':
+            j = line.find('~~', i + 2)
+            if j != -1:
+                result += '<ins>' + line[i + 2:j] + '</ins>'
+                i = j + 2
+            else:
+                result += line[i:i + 2]
+                i += 2
+        else:
+            result += line[i]
+            i += 1
+    return result
 
 
 def compile_bold_stars(line):
@@ -115,7 +170,21 @@ def compile_bold_stars(line):
     >>> compile_bold_stars('**')
     '**'
     '''
-    return line
+    result = ''
+    i = 0
+    while i < len(line):
+        if line[i:i + 2] == '**':
+            j = line.find('**', i + 2)
+            if j != -1:
+                result += '<b>' + line[i + 2:j] + '</b>'
+                i = j + 2
+            else:
+                result += line[i:i + 2]
+                i += 2
+        else:
+            result += line[i]
+            i += 1
+    return result
 
 
 def compile_bold_underscore(line):
@@ -136,7 +205,21 @@ def compile_bold_underscore(line):
     >>> compile_bold_underscore('__')
     '__'
     '''
-    return line
+    result = ''
+    i = 0
+    while i < len(line):
+        if line[i:i + 2] == '__':
+            j = line.find('__', i + 2)
+            if j != -1:
+                result += '<b>' + line[i + 2:j] + '</b>'
+                i = j + 2
+            else:
+                result += line[i:i + 2]
+                i += 2
+        else:
+            result += line[i]
+            i += 1
+    return result
 
 
 def compile_code_inline(line):
@@ -166,7 +249,26 @@ def compile_code_inline(line):
     >>> compile_code_inline('```python3')
     '```python3'
     '''
-    return line
+    result = ''
+    i = 0
+    while i < len(line):
+        if line[i] == '`':
+            if i + 1 < len(line) and line[i + 1] == '`':
+                result += '`'
+                i += 1
+            else:
+                j = line.find('`', i + 1)
+                if j != -1:
+                    content = line[i + 1:j].replace('<', '&lt;').replace('>', '&gt;')
+                    result += f'<code>{content}</code>'
+                    i = j + 1
+                else:
+                    result += line[i:]
+                    break
+        else:
+            result += line[i]
+            i += 1
+    return result
 
 
 def compile_links(line):
@@ -186,7 +288,28 @@ def compile_links(line):
     >>> compile_links('this is wrong: [course webpage](https://github.com/mikeizbicki/cmc-csci040')
     'this is wrong: [course webpage](https://github.com/mikeizbicki/cmc-csci040'
     '''
-    return line
+    result = ''
+    i = 0
+    while i < len(line):
+        if line[i] == '[':
+            j = line.find(']', i + 1)
+            if j != -1 and j + 1 < len(line) and line[j + 1] == '(':
+                k = line.find(')', j + 2)
+                if k != -1:
+                    text = line[i + 1:j]
+                    url = line[j + 2:k]
+                    result += f'<a href="{url}">{text}</a>'
+                    i = k + 1
+                else:
+                    result += line[i]
+                    i += 1
+            else:
+                result += line[i]
+                i += 1
+        else:
+            result += line[i]
+            i += 1
+    return result
 
 
 def compile_images(line):
@@ -205,4 +328,25 @@ def compile_images(line):
     >>> compile_images('This is an image of Mike Izbicki: ![Mike Izbicki](https://avatars1.githubusercontent.com/u/1052630?v=2&s=460)')
     'This is an image of Mike Izbicki: <img src="https://avatars1.githubusercontent.com/u/1052630?v=2&s=460" alt="Mike Izbicki" />'
     '''
-    return line
+    result = ''
+    i = 0
+    while i < len(line):
+        if line[i] == '!' and i + 1 < len(line) and line[i + 1] == '[':
+            j = line.find(']', i + 2)
+            if j != -1 and j + 1 < len(line) and line[j + 1] == '(':
+                k = line.find(')', j + 2)
+                if k != -1:
+                    alt = line[i + 2:j]
+                    url = line[j + 2:k]
+                    result += f'<img src="{url}" alt="{alt}" />'
+                    i = k + 1
+                else:
+                    result += line[i]
+                    i += 1
+            else:
+                result += line[i]
+                i += 1
+        else:
+            result += line[i]
+            i += 1
+    return result
