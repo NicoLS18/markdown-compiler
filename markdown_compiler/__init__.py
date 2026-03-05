@@ -129,11 +129,56 @@ def compile_lines(text):
         print('i=',i)
     </pre>
     <BLANKLINE>
+
+    NOTE:
+    This third set of test cases tests ordered lists.
+
+    >>> print(compile_lines("""
+    ... 1. this
+    ... 2. is
+    ... 3. a list
+    ... """))
+    <BLANKLINE>
+    <ol>
+    <li>this</li>
+    <li>is</li>
+    <li>a list</li>
+    </ol>
+
+    >>> print(compile_lines("""
+    ... Some text before:
+    ... 1. **bold** item
+    ... 2. *italic* item
+    ... """))
+    <BLANKLINE>
+    <p>
+    Some text before:
+    <ol>
+    <li><b>bold</b> item</li>
+    <li><i>italic</i> item</li>
+    </ol>
+    </p>
+
+    >>> print(compile_lines("""
+    ... 1. first
+    ... 2. second
+    ...
+    ... Normal paragraph.
+    ... """))
+    <BLANKLINE>
+    <ol>
+    <li>first</li>
+    <li>second</li>
+    </ol>
+    <p>
+    Normal paragraph.
+    </p>
     '''
     lines = text.split('\n')
     new_lines = []
     in_paragraph = False
     in_pre = False
+    in_list = False
     for line in lines:
         if in_pre:
             if line.strip() == '```':
@@ -146,11 +191,48 @@ def compile_lines(text):
             new_lines.append('<pre>')
         else:
             line = line.strip()
+            # detect ordered list item: starts with digits followed by '. '
+            is_list_item = False
+            list_text = ''
+            i = 0
+            while i < len(line) and line[i].isdigit():
+                i += 1
+            if i > 0 and i + 1 < len(line) and line[i] == '.' and line[i + 1] == ' ':
+                is_list_item = True
+                list_text = line[i + 2:]
             if line == '':
+                closed = False
+                if in_list:
+                    new_lines.append('</ol>')
+                    in_list = False
+                    closed = True
                 if in_paragraph:
-                    line = '</p>'
+                    new_lines.append('</p>')
                     in_paragraph = False
+                    closed = True
+                if not closed:
+                    new_lines.append(line)
+            elif is_list_item:
+                if not in_paragraph and not in_list:
+                    in_list = True
+                    new_lines.append('<ol>')
+                elif in_paragraph and not in_list:
+                    in_list = True
+                    new_lines.append('<ol>')
+                list_text = compile_headers(list_text)  # noqa: F405
+                list_text = compile_strikethrough(list_text)  # noqa: F405
+                list_text = compile_bold_stars(list_text)  # noqa: F405
+                list_text = compile_bold_underscore(list_text)  # noqa: F405
+                list_text = compile_italic_star(list_text)  # noqa: F405
+                list_text = compile_italic_underscore(list_text)  # noqa: F405
+                list_text = compile_code_inline(list_text)  # noqa: F405
+                list_text = compile_images(list_text)  # noqa: F405
+                list_text = compile_links(list_text)  # noqa: F405
+                new_lines.append('<li>' + list_text + '</li>')
             else:
+                if in_list:
+                    new_lines.append('</ol>')
+                    in_list = False
                 if line[0] != '#' and not in_paragraph:
                     in_paragraph = True
                     line = '<p>\n' + line
@@ -163,7 +245,7 @@ def compile_lines(text):
                 line = compile_code_inline(line)  # noqa: F405
                 line = compile_images(line)  # noqa: F405
                 line = compile_links(line)  # noqa: F405
-            new_lines.append(line)
+                new_lines.append(line)
     new_text = '\n'.join(new_lines)
     return new_text
 
