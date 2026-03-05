@@ -8,7 +8,7 @@ def compile_headers(line):
     Convert markdown headers into <h1>,<h2>,etc tags.
 
     HINT:
-    This is the simplest function to implement in this assignment. Compile. 
+    This is the simplest function to implement in this assignment. Compile.
     Use a slices to extract the first part of the line,
     then use if statements to check if they match the appropriate header markdown commands.
 
