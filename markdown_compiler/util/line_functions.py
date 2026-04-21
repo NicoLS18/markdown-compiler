@@ -24,7 +24,7 @@ def compile_headers(line):
     >>> compile_headers('      # this is not a header')
     '      # this is not a header'
     '''
-    if line.startswith('#'):
+    if line.lstrip().startswith('#'):
         level = line.find(' ')
         return f'<h{level}> {line[level+1:]}</h{level}>'
     return line
@@ -214,9 +214,12 @@ def compile_code_inline(line):
         end = line.find('`', start + 1)
         if end == -1:
             break
-        code = line[start + 1:end]
-        code = code.replace('<', '&lt;').replace('>', '&gt;')
-        line = line[:start] + '<code>' + code + '</code>' + line[end + 1:]
+        if end - start > 1:
+            code = line[start + 1:end]
+            code = code.replace('<', '&lt;').replace('>', '&gt;')
+            line = line[:start] + '<code>' + code + '</code>' + line[end + 1:]
+        else:
+            line = line[:start] + line[end + 1:]
     return line
 
 
@@ -250,9 +253,12 @@ def compile_links(line):
         url_end = line.find(')', url_start + 1)
         if url_end == -1:
             break
-        text = line[start + 1:end]
-        url = line[url_start + 1:url_end]
-        line = line[:start] + f'<a href="{url}">{text}</a>' + line[url_end + 1:]
+        if url_start - end == 1:
+            text = line[start + 1:end]
+            url = line[url_start + 1:url_end]
+            line = line[:start] + f'<a href="{url}">{text}</a>' + line[url_end + 1:]
+        else:
+            break
     return line
 
 
@@ -285,7 +291,10 @@ def compile_images(line):
         url_end = line.find(')', url_start + 1)
         if url_end == -1:
             break
-        text = line[start + 2:end]
-        url = line[url_start + 1:url_end]
-        line = line[:start] + f'<img src="{url}" alt="{text}" />' + line[url_end + 1:]
+        if url_start - end == 1:
+            text = line[start + 2:end]
+            url = line[url_start + 1:url_end]
+            line = line[:start] + f'<img src="{url}" alt="{text}" />' + line[url_end + 1:]
+        else:
+            break
     return line
