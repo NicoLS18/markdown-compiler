@@ -158,6 +158,8 @@ def compile_lines(text):
                 line = compile_images(line)
                 line = compile_links(line)
         new_lines.append(line)
+    if in_paragraph:
+        new_lines.append('</p>')
     new_text = '\n'.join(new_lines)
     return new_text
 
@@ -230,7 +232,9 @@ def minify(html):
     >>> minify('a\n\n\n\n\n\n\n\n\n\n\n\n\n\nb\n\n\n\n\n\n\n\n\n\n')
     'a b'
     '''
-    return re.sub(r'\s+', ' ', html)
+    html = re.sub(r'\s+', ' ', html)
+    html = html.strip()
+    return html
 
 
 def convert_file(input_file, add_css):
