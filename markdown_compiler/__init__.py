@@ -1,8 +1,4 @@
-'''
-This file contains functions that work on entire documents at a time
-(and not line-by-line).
-'''
-
+import re
 from markdown_compiler.util.line_functions import *
 
 
@@ -97,7 +93,6 @@ def compile_lines(text):
     ... Consider the following code block:
     ... ```
     ... x = 1*2 + 3*4
-    ... print('x=', x)
     ... ```
     ... And here's another code block:
     ... ```
@@ -109,7 +104,6 @@ def compile_lines(text):
     Consider the following code block:
     <pre>
     x = 1*2 + 3*4
-    print('x=', x)
     </pre>
     And here's another code block:
     <pre>
@@ -133,6 +127,7 @@ def compile_lines(text):
     lines = text.split('\n')
     new_lines = []
     in_paragraph = False
+    in_code_block = False
     for line in lines:
         line = line.strip()
         if line=='':
@@ -140,18 +135,28 @@ def compile_lines(text):
                 line='</p>'
                 in_paragraph = False
         else:
-            if line[0] != '#' and not in_paragraph:
+            if line[0:3] == '```':
+                if in_code_block:
+                    line = '</pre>'
+                    in_code_block = False
+                else:
+                    line = '<pre>'
+                    in_code_block = True
+            elif line[0] != '#' and not in_paragraph and not in_code_block:
                 in_paragraph = True
                 line = '<p>\n'+line
-            line = compile_headers(line)
-            line = compile_strikethrough(line)
-            line = compile_bold_stars(line)
-            line = compile_bold_underscore(line)
-            line = compile_italic_star(line)
-            line = compile_italic_underscore(line)
-            line = compile_code_inline(line)
-            line = compile_images(line)
-            line = compile_links(line)
+            elif in_code_block:
+                pass
+            else:
+                line = compile_headers(line)
+                line = compile_strikethrough(line)
+                line = compile_bold_stars(line)
+                line = compile_bold_underscore(line)
+                line = compile_italic_star(line)
+                line = compile_italic_underscore(line)
+                line = compile_code_inline(line)
+                line = compile_images(line)
+                line = compile_links(line)
         new_lines.append(line)
     new_text = '\n'.join(new_lines)
     return new_text
@@ -225,7 +230,7 @@ def minify(html):
     >>> minify('a\n\n\n\n\n\n\n\n\n\n\n\n\n\nb\n\n\n\n\n\n\n\n\n\n')
     'a b'
     '''
-    return html
+    return re.sub(r'\s+', ' ', html)
 
 
 def convert_file(input_file, add_css):
