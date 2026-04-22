@@ -131,53 +131,53 @@ def compile_lines(text):
     </pre>
     <BLANKLINE>
     '''
-        lines = text.split('\n')
-        new_lines = []
-        in_paragraph = False
-        in_code_block = False
+    lines = text.split('\n')
+    new_lines = []
+    in_paragraph = False
+    in_code_block = False
 
-        for line in lines:
-            line = line.strip()
-
-            if line == '':
-                if in_paragraph:
-                    new_lines.append('</p>')
-                    in_paragraph = False
-                new_lines.append('')
-                continue
-
-            if line == '```':
-                if in_code_block:
-                    new_lines.append('</pre>')
-                    in_code_block = False
-                else:
-                    new_lines.append('<pre>')
-                    in_code_block = True
-                continue
-
-            if in_code_block:
-                new_lines.append(line)
-                continue
-
-            line = compile_headers(line)
-            line = compile_strikethrough(line)
-            line = compile_bold_stars(line)
-            line = compile_bold_underscore(line)
-            line = compile_italic_star(line)
-            line = compile_italic_underscore(line)
-            line = compile_code_inline(line)
-            line = compile_images(line)
-            line = compile_links(line)
-
-            if line[0] != '#' and not in_paragraph:
-                in_paragraph = True
-                new_lines.append('<p>')
-                new_lines.append(line)
+    for line in lines:
+        original = line
+        line = line.strip()
+        if line == '':
+            if in_paragraph:
+                new_lines.append('</p>')
+                in_paragraph = False
             else:
-                new_lines.append(line)
+                new_lines.append('')
+            continue
+        if line == '```':
+            if in_code_block:
+                new_lines.append('</pre>')
+                in_code_block = False
+            else:
+                new_lines.append('<pre>')
+                in_code_block = True
+            continue
+        if in_code_block:
+            new_lines.append(original)
+            continue
 
-        new_text = '\n'.join(new_lines)
-        return new_text
+        # Apply transformations
+        line = compile_headers(line)
+        line = compile_strikethrough(line)
+        line = compile_bold_stars(line)
+        line = compile_bold_underscore(line)
+        line = compile_italic_star(line)
+        line = compile_italic_underscore(line)
+        line = compile_code_inline(line)
+        line = compile_images(line)
+        line = compile_links(line)
+
+        if line[0] != '#' and not in_paragraph:
+            in_paragraph = True
+            new_lines.append('<p>')
+            new_lines.append(line)
+        else:
+            new_lines.append(line)
+
+    new_text = '\n'.join(new_lines)
+    return new_text
 
 def markdown_to_html(markdown, add_css):
     '''

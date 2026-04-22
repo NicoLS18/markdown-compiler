@@ -24,7 +24,7 @@ def compile_headers(line):
     >>> compile_headers('      # this is not a header')
     '      # this is not a header'
     '''
-    if line.lstrip().startswith('#'):
+    if line.startswith('#'):
         level = line.find(' ')
         return f'<h{level}> {line[level+1:]}</h{level}>'
     return line
@@ -207,6 +207,8 @@ def compile_code_inline(line):
     >>> compile_code_inline('```python3')
     '```python3'
     '''
+    if line.startswith('```'):
+        return line
     while True:
         start = line.find('`')
         if start == -1:
